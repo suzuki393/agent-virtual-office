@@ -8,9 +8,10 @@
 import { useState, useEffect } from 'react'
 import en from './locales/en.json'
 import zhTW from './locales/zh-TW.json'
+import ja from './locales/ja.json'
 import { rng } from './systems/rng.js'
 
-const LOCALES = { en, 'zh-TW': zhTW }
+const LOCALES = { en, 'zh-TW': zhTW, ja }
 
 // Detect language: ?lang= > localStorage > navigator > 'en'
 function detectLang() {
@@ -23,12 +24,18 @@ function detectLang() {
     // Check browser language — only map Traditional Chinese variants
     const nav = navigator.language
     if (nav === 'zh-TW' || nav === 'zh-HK' || nav === 'zh-Hant' || nav?.startsWith('zh-Hant')) return 'zh-TW'
+    if (nav === 'ja' || nav?.startsWith('ja-')) return 'ja'
   }
   return 'en'
 }
 
 let currentLang = detectLang()
 let currentLocale = LOCALES[currentLang] || en
+// Fork: keep ~/.claude/office-lang in step with the detected language (?lang= / browser), so hook
+// bubbles match the UI without a manual toggle.
+if (typeof window !== 'undefined' && import.meta.env?.MODE !== 'test' && typeof fetch === 'function') {
+  fetch('/api/lang', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: currentLang }).catch(() => {})
+}
 let listeners = []
 
 export function locale() { return currentLang }

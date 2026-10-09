@@ -292,8 +292,8 @@ if (!/^\d+$/.test(port) || parseInt(port, 10) < 1 || parseInt(port, 10) > 65535)
   process.exit(1)
 }
 const lang = args.find(a => a.startsWith('--lang='))?.split('=')[1]
-if (lang && lang !== 'en' && lang !== 'zh-TW') {
-  console.error('  Invalid --lang: ' + lang + '. Use "en" or "zh-TW".')
+if (lang && lang !== 'en' && lang !== 'zh-TW' && lang !== 'ja') {
+  console.error('  Invalid --lang: ' + lang + '. Use "en", "zh-TW" or "ja".')
   process.exit(1)
 }
 const open = !args.includes('--no-open')
@@ -311,7 +311,7 @@ if (help) {
 
   Options:
     --port=PORT    Port number (default: 5174)
-    --lang=LANG    Language: en, zh-TW (default: auto-detect)
+    --lang=LANG    Language: en, zh-TW, ja (default: auto-detect)
     --no-open      Don't open browser automatically
     --no-host      Dev mode only: don't expose to LAN (dev server binds 0.0.0.0 by
                    default; serve mode is loopback-only by default, so --no-host is

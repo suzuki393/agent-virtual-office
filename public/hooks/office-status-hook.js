@@ -46,12 +46,16 @@ function detectHookLang() {
   try {
     const langFile = path.join(os.homedir(), '.claude', 'office-lang')
     const lang = fs.readFileSync(langFile, 'utf-8').trim()
-    if (lang === 'en' || lang === 'zh-TW') return lang
+    if (lang === 'en' || lang === 'zh-TW' || lang === 'ja') return lang
   } catch {}
   return 'en' // default: English (matches browser-side i18n default)
 }
 
-const LANG = detectHookLang()
+// Fork: 'ja' builds the zh-TW labels and translates them via toJaLabel() just before writing,
+// so upstream's en/zh branches stay untouched.
+const HOOK_LANG = detectHookLang()
+const HOOK_JA = HOOK_LANG === 'ja'
+const LANG = HOOK_JA ? 'zh-TW' : HOOK_LANG
 
 // Read hook event from stdin
 let input = ''
@@ -836,6 +840,56 @@ function skillLabel(skill, isDone) {
   return `💼 ${skill}`
 }
 
+// ─── Fork: Japanese labels (zh-TW label → ja) ───
+const JA_EXACT = {
+  '✅ 完成！': '✅ 完了！', '✅ 下一個': '✅ 次へ', '✅ 搞定了': '✅ できた', '✅ OK': '✅ OK',
+  '✏️ 改 code 中': '✏️ 編集中', '✏️ 下刀了': '✏️ 手を入れる',
+  '📝 寫新檔案': '📝 新しいファイル', '📝 生成中': '📝 作成中',
+  '📖 翻資料中': '📖 資料を読む', '📖 研究研究': '📖 調べ中',
+  '🔍 找檔案中': '🔍 ファイル探し', '🔍 翻箱倒櫃': '🔍 探し回り中',
+  '🔎 搜原始碼': '🔎 コード検索', '🔎 找線索中': '🔎 手がかり探し',
+  '⚡ 跑指令中': '⚡ コマンド実行', '⚡ 終端機出動': '⚡ ターミナル出動',
+  '📋 派子任務': '📋 仕事を振る', '📋 分工合作': '📋 分担作業',
+  '🌐 查資料中': '🌐 調べ物', '🌐 上網看看': '🌐 ネットで確認',
+  '🌐 搜尋中': '🌐 検索中', '🌐 找答案中': '🌐 答え探し',
+  '📓 改 notebook': '📓 ノート編集', '📓 跑實驗中': '📓 実験中',
+  '📋 整理任務中': '📋 タスク整理', '📋 排工作': '📋 段取り中',
+  '🏗️ 規劃架構中': '🏗️ 段取りを考え中', '🏗️ 想想怎麼做': '🏗️ 進め方を検討',
+  '🏗️ 架構定案！': '🏗️ 段取り決定！', '🏗️ 計劃好了': '🏗️ 計画できた',
+  '🚪 問問看': '🚪 塾長に確認', '🚪 確認一下': '🚪 ちょっと確認',
+  '💻 處理中': '💻 処理中', '💻 忙著呢': '💻 作業中',
+  '✅ 報告完畢': '✅ 報告完了', '✅ 任務結束': '✅ 任務完了', '✅ 收工！': '✅ 終わり！',
+  '📊 規劃中': '📊 計画中', '📋 寫規格中': '📋 仕様作成中', '🧐 Review 中': '🧐 レビュー中',
+  '🧪 跑測試中': '🧪 テスト中', '⌨️ 開發中': '⌨️ 実装中', '🔧 修 bug 中': '🔧 不具合対応中',
+  '🚀 部署中': '🚀 反映中', '🔬 研究中': '🔬 調査中', '🏗️ 設計架構中': '🏗️ 設計中',
+  '🛡️ 安全檢查中': '🛡️ 安全確認中',
+  '🤔 想一下...': '🤔 考え中…', '📊 收到，規劃中': '📊 承知、段取り中', '💡 好問題...': '💡 なるほど…', '🧠 分析中': '🧠 分析中',
+  '🚫 權限被拒': '🚫 権限なし', '⏳ API 限流中': '⏳ API制限中', '🔑 API 認證失敗': '🔑 API認証失敗', '❌ 卡住': '❌ 停止中',
+  '✅ 這輪結束': '✅ ひと区切り', '✅ 交給你了': '✅ 塾長へお返し',
+}
+const JA_NOUN = {
+  '指令': 'コマンド', '連線': '通信', '部署': '反映', '程式': 'スクリプト', '檔案': 'ファイル',
+  '測試': 'テスト', '建置': 'ビルド', '套件': 'パッケージ', '腳本': 'スクリプト',
+}
+function jaNoun(c) { return JA_NOUN[c] || c.replace(/^(\d+) 個任務$/, '$1件のタスク') }
+const JA_PATTERNS = [
+  [/^✏️ 改 (.+)$/, (_, c) => `✏️ 編集 ${c}`],
+  [/^📝 寫 (.+)$/, (_, c) => `📝 作成 ${c}`],
+  [/^📖 讀 (.+)$/, (_, c) => `📖 読む ${c}`],
+  [/^🔎 搜 (.+)$/, (_, c) => `🔎 検索 ${c}`],
+  [/^🔍 找 (.+)$/, (_, c) => `🔍 探す ${c}`],
+  [/^✅ (.+) 好了$/, (_, c) => `✅ ${jaNoun(c)} できた`],
+  [/^✅ (.+) 搞定$/, (_, c) => `✅ ${jaNoun(c)} 完了`],
+  [/^❌ (.+) 失敗$/, (_, c) => `❌ ${jaNoun(c)} 失敗`],
+  [/^(⚡|📋) (.+)$/, (_, e, c) => `${e} ${jaNoun(c)}`],
+]
+function toJaLabel(label) {
+  if (!HOOK_JA || typeof label !== 'string') return label
+  if (JA_EXACT[label]) return JA_EXACT[label]
+  for (const [re, fn] of JA_PATTERNS) if (re.test(label)) return label.replace(re, fn)
+  return label
+}
+
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
 
 // ─── Skill context — persist skill→role across tool calls within a subagent ───
@@ -1258,11 +1312,11 @@ function processEvent(event) {
         const sfAgents = sfData && Array.isArray(sfData.agents)
           ? sfData.agents.filter(a => a && typeof a === 'object' && VALID_HOOK_ROLES.includes(a.role))
           : []
-        const sfLabel = sfReason === 'api-rate-limit'
+        const sfLabel = toJaLabel(sfReason === 'api-rate-limit'
           ? (LANG === 'zh-TW' ? '⏳ API 限流中' : '⏳ API rate-limited')
           : sfReason === 'api-auth-failed'
             ? (LANG === 'zh-TW' ? '🔑 API 認證失敗' : '🔑 API auth failed')
-            : (LANG === 'zh-TW' ? '❌ 卡住' : '❌ Blocked')  // floor = blocked-unknown; label must not narrow beyond the token
+            : (LANG === 'zh-TW' ? '❌ 卡住' : '❌ Blocked'))  // floor = blocked-unknown; label must not narrow beyond the token
 
         const updatedAgents = sfAgents.map(a => {
           // Only stamp agents that are actively working or planning — a done/idle agent was
@@ -1327,9 +1381,9 @@ function processEvent(event) {
               role: a.role,
               task: typeof a.task === 'string' ? a.task.slice(0, 200) : null,
               status: 'done',
-              label: pick(LANG === 'en'
+              label: toJaLabel(pick(LANG === 'en'
                 ? ['✅ All done', '✅ Round complete', '✅ Over to you']
-                : ['✅ 搞定了', '✅ 這輪結束', '✅ 交給你了']),
+                : ['✅ 搞定了', '✅ 這輪結束', '✅ 交給你了'])),
               hint: null,
             }))
           const output = {
@@ -1394,6 +1448,7 @@ function processEvent(event) {
 
   // LB本陣 fork: fold the computed role onto the configured staff desk (no-op without config).
   ;({ role, helperAction } = applyStaffMapping(loadStaffConfig(), role, helperAction, agentType, agentId))
+  label = toJaLabel(label)
 
   // RMW-SITE-B: acquire write-lock for the full merge-read → build-output → write span.
   // The try/finally ensures release even when inner guards call `return`.
@@ -1672,5 +1727,7 @@ if (typeof module !== 'undefined') {
     getSessionSlug,
     // LB本陣 fork: staff mapping
     loadStaffConfig, staffDeskFor, applyStaffMapping,
+    // Fork: Japanese labels
+    toJaLabel, JA_EXACT,
   }
 }

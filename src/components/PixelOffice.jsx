@@ -50,15 +50,15 @@ const SprintKanban = React.memo(function SprintKanban({ x, y, doneCount = 0 }) {
       <rect x={x} y={y} width={W} height={H} rx={2} fill="#F8F4E8" stroke="#C8C0A8" strokeWidth="0.8" />
       {/* Header bar */}
       <rect x={x} y={y} width={W} height={10} rx={2} fill="#7070A0" opacity="0.9" />
-      <text x={x + 28} y={y + 7.5} textAnchor="middle" fontSize="6" fill="white" fontFamily="monospace" fontWeight="bold">SPRINT</text>
+      <text x={x + 28} y={y + 7.5} textAnchor="middle" fontSize="6" fill="white" fontFamily="monospace" fontWeight="bold">{t('signs.sprint', 'SPRINT')}</text>
       <text x={x + W - 4} y={y + 7.5} textAnchor="end" fontSize="6" fill="#FFE08A" fontFamily="monospace" fontWeight="bold">{doneCount}</text>
       {/* Column dividers */}
       <line x1={x + 26} y1={y + 10} x2={x + 26} y2={y + H} stroke="#D8D0C0" strokeWidth="0.6" />
       <line x1={x + 52} y1={y + 10} x2={x + 52} y2={y + H} stroke="#D8D0C0" strokeWidth="0.6" />
       {/* Column headers */}
-      <text x={x + 13} y={y + 17} textAnchor="middle" fontSize="5.5" fill="#888" fontFamily="monospace">TODO</text>
-      <text x={x + 39} y={y + 17} textAnchor="middle" fontSize="5.5" fill="#888" fontFamily="monospace">DOING</text>
-      <text x={x + 65} y={y + 17} textAnchor="middle" fontSize="5.5" fill={filled > 0 ? '#2E7D32' : '#888'} fontFamily="monospace" fontWeight={filled > 0 ? 'bold' : 'normal'}>DONE</text>
+      <text x={x + 13} y={y + 17} textAnchor="middle" fontSize="5.5" fill="#888" fontFamily="monospace">{t('signs.todo', 'TODO')}</text>
+      <text x={x + 39} y={y + 17} textAnchor="middle" fontSize="5.5" fill="#888" fontFamily="monospace">{t('signs.doing', 'DOING')}</text>
+      <text x={x + 65} y={y + 17} textAnchor="middle" fontSize="5.5" fill={filled > 0 ? '#2E7D32' : '#888'} fontFamily="monospace" fontWeight={filled > 0 ? 'bold' : 'normal'}>{t('signs.done', 'DONE')}</text>
       {/* TODO column: static colored task cards */}
       {todoCards.map((color, i) => (
         <rect key={i} x={x + 3} y={y + 20 + i * 8} width={20} height={6} rx={1} fill={color} opacity="0.25" />
@@ -1143,7 +1143,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       {isDeskShown('gate') && <GateBooth x={100} y={90} />}
       <Plant x={170} y={50} />
       <rect x={65} y={120} width={70} height={12} rx={2} fill="#9B8B6B" opacity="0.7" />
-      <text x={100} y={129} textAnchor="middle" fontSize="6.5" fill="#C8A878" fontFamily="monospace" opacity="0.85">WELCOME</text>
+      <text x={100} y={129} textAnchor="middle" fontSize="6.5" fill="#C8A878" fontFamily="monospace" opacity="0.85">{t('signs.welcome', 'WELCOME')}</text>
 
       {/* ═══ HALLWAY (connecting entrance to meeting room) ═══ */}
       <WallWindow x={250} y={14} w={44} h={28} hour={hour} weather={weather} reducedMotion={weatherReduced} />
@@ -1156,7 +1156,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       <rect x={236} y={58} width={10} height={7} fill="#FF9E9E" />
       <rect x={223} y={68} width={10} height={7} fill="#A8E6CF" />
       <rect x={236} y={68} width={10} height={7} fill="#87CEEB" />
-      <text x={245} y={87} textAnchor="middle" fontSize="6" fill="#8B7355" fontFamily="monospace" opacity="0.7">NOTICE</text>
+      <text x={245} y={87} textAnchor="middle" fontSize="6" fill="#8B7355" fontFamily="monospace" opacity="0.7">{t('signs.notice', 'NOTICE')}</text>
       {/* Coat rack */}
       <line x1={400} y1={50} x2={400} y2={80} stroke="#6B5335" strokeWidth="2" />
       <circle cx={400} cy={47} r={3} fill="#6B5335" />
@@ -1176,8 +1176,8 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       {/* ═══ MAIN OFFICE ═══ */}
       {/* SHIP IT poster on north wall interior */}
       <rect x={15} y={170} width={50} height={28} rx={2} fill="#F5F0E0" stroke="#CCC" strokeWidth="0.8" />
-      <text x={40} y={184} textAnchor="middle" fontSize="7" fill="#7F77DD" fontFamily="monospace">SHIP IT</text>
-      <text x={40} y={194} textAnchor="middle" fontSize="6" fill="#888" fontFamily="monospace">everyday</text>
+      <text x={40} y={184} textAnchor="middle" fontSize="7" fill="#7F77DD" fontFamily="monospace">{t('signs.shipIt', 'SHIP IT')}</text>
+      <text x={40} y={194} textAnchor="middle" fontSize="6" fill="#888" fontFamily="monospace">{t('signs.everyday', 'everyday')}</text>
 
       {/* Sprint Kanban board on north wall, planning area (clear of door at x=88-140) */}
       <SprintKanban x={160} y={165} doneCount={totalDoneToday} />
@@ -1225,7 +1225,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       <Plant x={22} y={290} />
 
       {/* ═══ MEETING ROOM ═══ */}
-      <ScaledText x={705} y={26} scale={labelTextScale} textAnchor="middle" fontSize="8" fill="#7070A0" fontFamily="monospace" opacity="0.7">MEETING</ScaledText>
+      <ScaledText x={705} y={26} scale={labelTextScale} textAnchor="middle" fontSize="8" fill="#7070A0" fontFamily="monospace" opacity="0.7">{t('signs.meeting', 'MEETING')}</ScaledText>
       <Rug x={634} y={70} w={150} h={120} color="#7070A0" />
       <MeetingTable x={705} y={162} w={100} h={60} />
       <Plant x={630} y={55} />
@@ -1246,7 +1246,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       <Plant x={644} y={390} />
 
       {/* ═══ RESEARCH ═══ */}
-      <ScaledText x={700} y={432} scale={labelTextScale} textAnchor="middle" fontSize="7" fill="#6060A0" fontFamily="monospace" opacity="0.7">RESEARCH</ScaledText>
+      <ScaledText x={700} y={432} scale={labelTextScale} textAnchor="middle" fontSize="7" fill="#6060A0" fontFamily="monospace" opacity="0.7">{t('signs.research', 'RESEARCH')}</ScaledText>
       {/* Bookshelves along south outer wall, away from door */}
       <Bookshelf x={470} y={440} width={65} rows={2} />
       <Bookshelf x={625} y={440} width={65} rows={2} />
@@ -1255,7 +1255,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       <Plant x={788} y={540} />
 
       {/* ═══ LOUNGE ═══ */}
-      <ScaledText x={120} y={432} scale={labelTextScale} textAnchor="middle" fontSize="7" fill="#507050" fontFamily="monospace" opacity="0.7">LOUNGE</ScaledText>
+      <ScaledText x={120} y={432} scale={labelTextScale} textAnchor="middle" fontSize="7" fill="#507050" fontFamily="monospace" opacity="0.7">{t('signs.lounge', 'LOUNGE')}</ScaledText>
       <Rug x={50} y={440} w={180} h={95} color="#507050" />
       <Couch x={55} y={450} width={90} color="#B97A4E" />
       <RoundTable x={175} y={490} r={22} />
@@ -1287,7 +1287,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       {/* Phone booth */}
       <g>
         <rect x={735} y={455} width={45} height={45} rx={4} fill="#8888AA" stroke="#6666AA" strokeWidth="1" />
-        <text x={758} y={470} textAnchor="middle" fontSize="6" fill="#BBBBDD" fontFamily="monospace" fontWeight="bold" opacity="0.9">PHONE</text>
+        <text x={758} y={470} textAnchor="middle" fontSize="6" fill="#BBBBDD" fontFamily="monospace" fontWeight="bold" opacity="0.9">{t('signs.phone', 'PHONE')}</text>
         {/* Phone on wall */}
         <rect x={745} y={478} width={14} height={16} rx={2} fill="#666688" />
         <circle cx={752} cy={485} r={4} fill="#555577" />
