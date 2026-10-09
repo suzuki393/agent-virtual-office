@@ -87,6 +87,14 @@ if (command === 'setup') {
     process.exit(1)
   }
 
+  // LB本陣 fork: copy office.config.json so the hook can map roles onto staff desks
+  const staffCfgSrc = path.join(root, 'office.config.json')
+  if (fs.existsSync(staffCfgSrc)) {
+    try { fs.copyFileSync(staffCfgSrc, path.join(claudeDir, 'office.config.json')) } catch (e) {
+      console.warn('  Warning: Could not copy office.config.json (' + (e && e.message) + ')')
+    }
+  }
+
   // Read or create settings.json
   let settings = {}
   if (fs.existsSync(settingsPath)) {
@@ -155,7 +163,7 @@ if (command === 'uninstall') {
 
   // Remove hook files (current + legacy .sh). Each unlink is independently guarded (finding 6):
   // a locked/already-removed file must not abort cleanup of the rest.
-  for (const f of [hookDest, hookDestLegacy]) {
+  for (const f of [hookDest, hookDestLegacy, path.join(claudeDir, 'office.config.json')]) {
     if (fs.existsSync(f)) {
       try {
         fs.unlinkSync(f)

@@ -13,6 +13,7 @@ import { gateWaiting, GATE_SHEET_CAP } from '../systems/reviewGate'
 import { themeOverlay, cappedThemeOpacity } from '../systems/theme'
 import { SCENE, SIGNS } from '../systems/officePalette'
 import { eventName, charName, t, useLocale } from '../i18n'
+import { HAS_STAFF, isDeskShown, staffDesks } from '../config/officeConfig.js'
 import AgentCharacter from './AgentCharacter'
 import PairLinkOverlay from './PairLink'
 import HelperHuddles from './HelperHuddle'
@@ -680,7 +681,7 @@ const NightSky = React.memo(function NightSky({ hour }) {
 })
 
 // Static desk positions matching WAYPOINTS — defined outside component to avoid re-creation
-const DESK_DATA = [
+const DESK_DATA = staffDesks([
   { id: 'pm',   x: 140, y: 240, label: 'PM',     color: '#378ADD', variant: 'pm' },
   { id: 'arch', x: 260, y: 240, label: 'Arch',    color: '#7F77DD', variant: 'arch' },
   { id: 'qa',   x: 400, y: 220, label: 'QA',      color: '#BA7517', variant: 'qa' },
@@ -688,7 +689,7 @@ const DESK_DATA = [
   { id: 'dev',      x: 340, y: 340, label: 'Dev',      color: '#1D9E75', variant: 'dev' },
   { id: 'ops',      x: 460, y: 340, label: 'Ops',      color: '#D85A30', variant: 'ops' },
   { id: 'designer', x: 140, y: 360, label: 'Design',   color: '#E8688A', variant: 'designer' },
-]
+])
 const DESK_IDS = DESK_DATA.map(({ id }) => id)
 
 // AVO-159: paint-order signature keys on the agent's CURRENT position.y (snaps at waypoint
@@ -1139,7 +1140,7 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
       <WallWindow x={72} y={14} w={44} h={28} hour={hour} weather={weather} reducedMotion={weatherReduced} />
       {/* Slice 2: fill the long windowless gap above the gate (owner: 窗戶位置) */}
       <WallWindow x={158} y={14} w={40} h={28} hour={hour} weather={weather} reducedMotion={weatherReduced} />
-      <GateBooth x={100} y={90} />
+      {isDeskShown('gate') && <GateBooth x={100} y={90} />}
       <Plant x={170} y={50} />
       <rect x={65} y={120} width={70} height={12} rx={2} fill="#9B8B6B" opacity="0.7" />
       <text x={100} y={129} textAnchor="middle" fontSize="6.5" fill="#C8A878" fontFamily="monospace" opacity="0.85">WELCOME</text>
@@ -1189,10 +1190,12 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
           stay at their faint 0.4: PLANNING sits ON the sprint board and REVIEW beside the
           Researcher tag, so making them readable prints over both. No letter-spacing on
           ENGINEERING either — tracking widened it under the Developer name tag. Anchors unchanged. */}
+      {!HAS_STAFF && (<>
       <text x={200} y={200} textAnchor="middle" fontSize="7" fill={SIGNS.ink} fontFamily="monospace" opacity={SIGNS.faintOpacity}>PLANNING</text>
       <text x={460} y={200} textAnchor="middle" fontSize="7" fill={SIGNS.ink} fontFamily="monospace" opacity={SIGNS.faintOpacity}>REVIEW</text>
       <text x={400} y={310} textAnchor="middle" fontSize="7" fill={SIGNS.ink} fontFamily={SIGNS.font} fontWeight="600" opacity={SIGNS.signatureOpacity}>ENGINEERING</text>
       <path d="M392 314.5h16" stroke={SIGNS.accent} strokeWidth="1.5" opacity={SIGNS.signatureOpacity} />
+      </>)}
 
       {/* Personalized desks */}
       {DESK_DATA.map((d) => (
@@ -1208,6 +1211,10 @@ export default function PixelOffice({ animationQuality = 'full', mode = 'full' }
           onDeployClick={d.id === 'ops' ? handleDeployClick : undefined}
           labelScale={labelTextScale}
         />
+      ))}
+      {/* LB本陣: post (持ち場) label beside each staffed desk */}
+      {DESK_DATA.filter((d) => d.post).map((d) => (
+        <ScaledText key={`post-${d.id}`} x={d.x + 33} y={d.y - 10} scale={labelTextScale} textAnchor="start" fontSize="5.5" fill={d.color} fontFamily="sans-serif" opacity="0.85">{d.post}</ScaledText>
       ))}
 
       {/* Whiteboard (left of east wall) — clickable triggers eureka */}

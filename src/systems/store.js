@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import characters from '../config/characters.json'
+import { STAFF, rosterFor, remapStaffUpdates } from '../config/officeConfig.js'
 import { HOME_POSITIONS, OVERFLOW_POSITIONS, OVERFLOW_SLOT_BY_XY, clampToFloor, avoidOverlap, visuallyOverlapping } from './movementSystem.js'
 import { randomBubble, setNameResolver, behaviorLabel, t as i18nT } from '../i18n'
 import { generateContextBubble } from './contextBubble'
@@ -337,8 +338,9 @@ const _mode = (() => {
 // ─── Custom agent profiles (cached — URL params don't change) ───
 // Supported via: ?agents=Alice:dev,Bob:qa  OR  window.__office_config__.agents
 const _customProfiles = (() => {
-  if (typeof window === 'undefined') return {}
   const profiles = {}
+  for (const st of STAFF) profiles[st.desk] = { name: st.name, color: st.color }
+  if (typeof window === 'undefined') return profiles
   const cfg = window.__office_config__?.agents
   if (cfg && typeof cfg === 'object') {
     for (const [id, override] of Object.entries(cfg)) {
@@ -530,7 +532,7 @@ function collectClaimedSpots(agents, excludeIds) {
 
 
 const initAgents = (mode) => {
-  const roster = characters[mode] || characters.agentcortex
+  const roster = rosterFor(characters, mode)
   const agents = {}
   for (const c of roster) {
     const home = HOME_POSITIONS[c.id] || { x: 300, y: 250 }
@@ -1143,6 +1145,7 @@ export const useOfficeStore = create((set) => ({
 
   applyExternalStatus: (updates, meta = {}) =>
     set((s) => {
+      updates = remapStaffUpdates(updates)
       const now = meta.now || Date.now()
       const ext = { ...s.externalStatus }
       const agents = { ...s.agents }
@@ -1152,7 +1155,7 @@ export const useOfficeStore = create((set) => ({
       // agent apart from a static one: dynamic agents may carry session:null (postMessage/
       // hash callers), so the `.session` field cannot be used as the discriminator, and
       // s.agents itself is unreliable because it accumulates dynamic agents from prior calls.
-      const staticRosterIds = new Set((characters[s.mode] || characters.agentcortex).map(c => c.id))
+      const staticRosterIds = new Set(rosterFor(characters, s.mode).map(c => c.id))
       const activities = []
       // Preserve the dailyDoneLedger object identity when this update neither rolls the
       // day nor records a fresh 'done'. ensureCurrentDailyDoneLedger ALWAYS allocates a
@@ -1524,7 +1527,7 @@ export const useOfficeStore = create((set) => ({
       // keyed only on `.session` it would treat that agent as static and merely idle it —
       // leaving a phantom overflow character lingering forever. Anything outside the static
       // roster is dynamic and must be DELETED on clear, regardless of `.session`.
-      const staticRosterIds = new Set((characters[s.mode] || characters.agentcortex).map(c => c.id))
+      const staticRosterIds = new Set(rosterFor(characters, s.mode).map(c => c.id))
       const isDynamic = (id, a) => Boolean(a && a.session) || !staticRosterIds.has(id)
       // AVO-193 hygiene fix: applyExternalStatus's multi-session eviction path and
       // abortAgentMovement's removeAfterDoorAbort branch both prune _storeRecentPicks

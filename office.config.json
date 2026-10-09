@@ -1,0 +1,9 @@
+{
+  "_説明": "表示する社員の定義（LB本陣 fork 追加）。社員を足すときは staff に1行足す。desk は空いている席から選ぶ：pm / arch / qa / res / dev / ops / designer / gate。agent は対応する subagent 名、メイン会話は \"main\"、未作成は \"\"。hook 側へは npx ... setup で ~/.claude にコピーされる。",
+  "staff": [
+    { "desk": "pm",   "name": "あんな", "agent": "main",          "post": "納経所の受付", "color": "#C8553D" },
+    { "desk": "arch", "name": "宗助",   "agent": "reikai-gakari", "post": "お寺",         "color": "#8E6B3E" },
+    { "desk": "qa",   "name": "弥助",   "agent": "",              "post": "道標",         "color": "#2E8B57" },
+    { "desk": "res",  "name": "おたき", "agent": "",              "post": "宿坊",         "color": "#C9A227" }
+  ]
+}

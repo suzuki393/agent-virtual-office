@@ -58,6 +58,7 @@
     "public/",
     "src/",
     "index.html",
+    "office.config.json",
     "vite.config.mjs",
     "server.mjs",
     "package.json",

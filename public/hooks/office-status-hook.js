@@ -877,6 +877,35 @@ function readSkillContext(agentId) {
   } catch { return null }
 }
 
+// ─── LB本陣 fork: map roles onto configured staff desks ───
+// ~/.claude/office.config.json (copied by `setup`) lists staff as { desk, agent }.
+// A subagent whose name matches staff[].agent lands on that staff desk; everything else (the main
+// conversation and unregistered subagents) lands on the "main" staff desk. No config → no change.
+function loadStaffConfig() {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude', 'office.config.json'), 'utf-8'))
+    const staff = Array.isArray(cfg.staff) ? cfg.staff.filter(s => s && VALID_HOOK_ROLES.includes(s.desk)) : []
+    return staff.length ? staff : null
+  } catch { return null }
+}
+
+function staffDeskFor(staff, agentType) {
+  const own = agentType ? staff.find(s => s.agent && s.agent === agentType) : null
+  if (own) return { desk: own.desk, own: true }
+  const main = staff.find(s => s.agent === 'main') || staff[0]
+  return { desk: main.desk, own: false }
+}
+
+// Returns the remapped { role, helperAction }. A subagent with its own desk works there itself,
+// so it is not also drawn as a helper sprite; other subagents stay helpers at the main desk.
+function applyStaffMapping(staff, role, helperAction, agentType, agentId) {
+  if (!staff || !role) return { role, helperAction }
+  const type = agentType || readSkillContext(agentId)?.skillName || ''
+  const { desk, own } = staffDeskFor(staff, type)
+  const helper = helperAction ? (own ? null : { ...helperAction, role: desk }) : null
+  return { role: desk, helperAction: helper }
+}
+
 function clearSkillContext(agentId) {
   try { fs.unlinkSync(skillContextPath(agentId)) } catch {}
 }
@@ -1358,6 +1387,9 @@ function processEvent(event) {
       return
   }
 
+  // LB本陣 fork: fold the computed role onto the configured staff desk (no-op without config).
+  ;({ role, helperAction } = applyStaffMapping(loadStaffConfig(), role, helperAction, agentType, agentId))
+
   // RMW-SITE-B: acquire write-lock for the full merge-read → build-output → write span.
   // The try/finally ensures release even when inner guards call `return`.
   const mainLock = acquireStatusLock()
@@ -1633,5 +1665,7 @@ if (typeof module !== 'undefined') {
     // AVO audit remediation (2026-09-26): exported for unit testing slug parity against
     // office-status-codex.js. Behavior unchanged — this is a test-visibility-only export.
     getSessionSlug,
+    // LB本陣 fork: staff mapping
+    loadStaffConfig, staffDeskFor, applyStaffMapping,
   }
 }
