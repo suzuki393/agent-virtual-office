@@ -14,7 +14,8 @@ export function createStaffConfig(config) {
     .filter((s) => s && STAFF_DESKS.includes(s.desk))
   const has = staff.length > 0
   const byDesk = Object.fromEntries(staff.map((s) => [s.desk, s]))
-  const mainDesk = (staff.find((s) => s.agent === 'main') || staff[0])?.desk || null
+  const agentsOf = (s) => (Array.isArray(s.agent) ? s.agent : [s.agent])
+  const mainDesk = (staff.find((s) => agentsOf(s).includes('main')) || staff[0])?.desk || null
 
   return {
     STAFF: staff,

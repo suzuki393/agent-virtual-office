@@ -19,7 +19,7 @@ const realConfig = JSON.parse(fs.readFileSync(path.resolve('office.config.json')
 
 const CFG = {
   staff: [
-    { desk: 'pm', name: 'あんな', agent: 'main', post: '納経所の受付', color: '#C8553D' },
+    { desk: 'pm', name: 'あんな', agent: ['main', 'hisho'], post: '納経所の受付', color: '#C8553D' },
     { desk: 'arch', name: '宗助', agent: 'reikai-gakari', post: 'お寺', color: '#8E6B3E' },
     { desk: 'qa', name: '弥助', agent: '', post: '道標', color: '#2E8B57' },
   ],
@@ -30,7 +30,8 @@ describe('office.config.json (repo file)', () => {
     const c = createStaffConfig(realConfig)
     expect(c.STAFF.map((s) => s.name)).toEqual(['あんな', '宗助', '弥助', 'おたき'])
     expect(new Set(c.STAFF.map((s) => s.desk)).size).toBe(4)
-    expect(c.STAFF.find((s) => s.agent === 'main').name).toBe('あんな')
+    expect(c.STAFF.find((s) => [].concat(s.agent).includes('main')).name).toBe('あんな')
+    expect(c.STAFF.find((s) => [].concat(s.agent).includes('hisho')).name).toBe('あんな')
   })
 })
 
@@ -94,7 +95,18 @@ describe('hook applyStaffMapping', () => {
       .toEqual({ role: 'arch', helperAction: null })
   })
 
-  it('unregistered subagent (Explore, hisho, …) → helper at the main desk', () => {
+  it('hisho (array entry) → own desk of あんな, not a helper', () => {
+    const helper = { op: 'add', role: 'dev', agentId: 'h1', agentType: 'hisho' }
+    expect(hook.applyStaffMapping(staff, 'dev', helper, 'hisho', 'h1'))
+      .toEqual({ role: 'pm', helperAction: null })
+  })
+
+  it('a plain string agent still works', () => {
+    expect(hook.staffDeskFor([{ desk: 'qa', agent: 'main' }, { desk: 'res', agent: 'mk' }], 'mk'))
+      .toEqual({ desk: 'res', own: true })
+  })
+
+  it('unregistered subagent (Explore, …) → helper at the main desk', () => {
     const helper = { op: 'add', role: 'res', agentId: 'a2', agentType: 'Explore' }
     expect(hook.applyStaffMapping(staff, 'res', helper, 'Explore', 'a2'))
       .toEqual({ role: 'pm', helperAction: { ...helper, role: 'pm' } })

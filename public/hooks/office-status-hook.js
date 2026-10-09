@@ -878,7 +878,7 @@ function readSkillContext(agentId) {
 }
 
 // ─── LB本陣 fork: map roles onto configured staff desks ───
-// ~/.claude/office.config.json (copied by `setup`) lists staff as { desk, agent }.
+// ~/.claude/office.config.json (copied by `setup`) lists staff as { desk, agent } (agent: name or array).
 // A subagent whose name matches staff[].agent lands on that staff desk; everything else (the main
 // conversation and unregistered subagents) lands on the "main" staff desk. No config → no change.
 function loadStaffConfig() {
@@ -889,10 +889,15 @@ function loadStaffConfig() {
   } catch { return null }
 }
 
+// staff[].agent is a name or an array of names ("main" = the main conversation).
+function staffAgents(s) {
+  return (Array.isArray(s.agent) ? s.agent : [s.agent]).filter(a => typeof a === 'string' && a)
+}
+
 function staffDeskFor(staff, agentType) {
-  const own = agentType ? staff.find(s => s.agent && s.agent === agentType) : null
+  const own = agentType ? staff.find(s => staffAgents(s).includes(agentType)) : null
   if (own) return { desk: own.desk, own: true }
-  const main = staff.find(s => s.agent === 'main') || staff[0]
+  const main = staff.find(s => staffAgents(s).includes('main')) || staff[0]
   return { desk: main.desk, own: false }
 }
 
