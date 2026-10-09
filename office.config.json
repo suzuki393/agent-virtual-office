@@ -3,7 +3,7 @@
   "staff": [
     { "desk": "pm",   "name": "あんな", "agent": ["main", "hisho"], "post": "納経所の受付", "color": "#C8553D" },
     { "desk": "arch", "name": "宗助",   "agent": "reikai-gakari", "post": "お寺",         "color": "#8E6B3E" },
-    { "desk": "qa",   "name": "弥助",   "agent": "",              "post": "道標",         "color": "#2E8B57" },
-    { "desk": "res",  "name": "おたき", "agent": "",              "post": "宿坊",         "color": "#C9A227" }
+    { "desk": "qa",   "name": "弥助",   "agent": "marketing",     "post": "道標",         "color": "#2E8B57" },
+    { "desk": "res",  "name": "おたき", "agent": "shohin-kaihatsu", "post": "宿坊",         "color": "#C9A227" }
   ]
 }
